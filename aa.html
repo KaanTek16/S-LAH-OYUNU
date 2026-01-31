@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Casino Shooter FX</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            /* YENİ: KUMARHANE ARKA PLANI */
+            background: url('casino.png') no-repeat center center; /* Kumarhane resminin adı */
+            background-size: cover; /* Resmi tüm arka plana yay */
+            background-attachment: fixed; /* Arka planı sabit tut */
+            cursor: none; font-family: 'Arial Black', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Resim Alanı (Senin fotoğrafın, kumarhanenin üzerinde duracak) */
+        #photo-wrapper {
+            position: relative;
+            max-width: 85%;
+            max-height: 85vh;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            z-index: 1;
+        }
+
+        #my-photo {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 85vh;
+            border: 4px solid #444; /* Kumarhane temasına uygun koyu çerçeve */
+            pointer-events: auto;
+        }
+
+        h1 {
+            position: absolute; top: 10px; color: #ffcc00; /* Altın rengi */
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5); z-index: 10; pointer-events: none;
+            letter-spacing: 2px;
+        }
+
+        /* Sniper Crosshair */
+        #crosshair {
+            position: fixed; width: 40px; height: 40px;
+            border: 2px solid rgba(255, 0, 0, 0.8); border-radius: 50%;
+            transform: translate(-50%, -50%); z-index: 999; pointer-events: none;
+        }
+        #crosshair::before { content: ''; position: absolute; top: 50%; left: -15px; width: 70px; height: 1px; background: red; }
+        #crosshair::after { content: ''; position: absolute; left: 50%; top: -15px; width: 1px; height: 70px; background: red; }
+
+        /* GERÇEKÇİ CAM ÇATLAĞI */
+        .glass-crack {
+            position: absolute; width: 1px; height: 1px;
+            z-index: 8; pointer-events: none;
+        }
+        .crack-line {
+            position: absolute; background: rgba(255, 255, 255, 0.6);
+            height: 1px; transform-origin: left center;
+        }
+
+        /* GERÇEKÇİ KAN LEKESİ */
+        .blood {
+            position: absolute;
+            background: radial-gradient(circle, #8a0303 20%, #4a0000 70%, transparent 100%);
+            border-radius: 50%;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.9;
+            filter: blur(1px);
+        }
+        .blood-drip {
+            position: absolute;
+            width: 4px; background: #630000;
+            border-radius: 2px;
+            animation: drip 2s ease-in forwards;
+        }
+
+        @keyframes drip {
+            from { height: 0; opacity: 1; }
+            to { height: 40px; opacity: 0.6; transform: translateY(20px); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>HEDEFE TIKLA!</h1>
+
+    <div id="photo-wrapper">
+        <img src="qq.jpeg" id="my-photo" alt="Lütfen resmim.jpg dosyasını ekleyin">
+    </div>
+
+    <div id="crosshair"></div>
+
+    <audio id="gunshot">
+        <source src="gun.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const crosshair = document.getElementById('crosshair');
+        const gunshot = document.getElementById('gunshot');
+        const wrapper = document.getElementById('photo-wrapper');
+
+        window.addEventListener('mousemove', (e) => {
+            crosshair.style.left = e.clientX + 'px';
+            crosshair.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            gunshot.currentTime = 0;
+            gunshot.play().catch(() => {});
+
+            // Koordinatları resme göre ayarla (efektler resmin üzerinde görünsün)
+            const rect = wrapper.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Sadece resmin içindeyse efekt yap
+            if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                createGlass(x, y);
+                createBlood(x, y);
+            }
+        });
+
+        function createGlass(x, y) {
+            const container = document.createElement('div');
+            container.className = 'glass-crack';
+            container.style.left = x + 'px';
+            container.style.top = y + 'px';
+
+            for (let i = 0; i < 12; i++) {
+                const line = document.createElement('div');
+                line.className = 'crack-line';
+                const len = Math.random() * 100 + 50;
+                line.style.width = len + 'px';
+                line.style.transform = `rotate(${i * 30 + Math.random() * 20}deg)`;
+                line.style.opacity = Math.random();
+                container.appendChild(line);
+            }
+            wrapper.appendChild(container);
+        }
+
+        function createBlood(x, y) {
+            // Ana leke
+            const b = document.createElement('div');
+            b.className = 'blood';
+            const size = Math.random() * 30 + 20;
+            b.style.width = size + 'px';
+            b.style.height = size + 'px';
+            b.style.left = (x - size/2) + 'px';
+            b.style.top = (y - size/2) + 'px';
+            wrapper.appendChild(b);
+
+            // Damlama efekti (rastgele bazı kan lekeleri damlasın)
+            if (Math.random() > 0.4) { /* Damlama olasılığını artırdım */
+                const drip = document.createElement('div');
+                drip.className = 'blood-drip';
+                drip.style.left = x + 'px';
+                drip.style.top = y + 'px';
+                wrapper.appendChild(drip);
+            }
+        }
+    </script>
+</body>
+</html>
